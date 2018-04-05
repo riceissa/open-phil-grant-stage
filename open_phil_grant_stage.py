@@ -5,6 +5,7 @@ import sys
 import re
 import requests
 import mysql.connector
+import csv
 from bs4 import BeautifulSoup
 
 def main():
@@ -26,6 +27,13 @@ def main():
                                         grantee, donation_date)
         print("DEBUG:", grant_stage, grant_url, file=sys.stderr)
         grant_stage_map[grant_url] = grant_stage
+
+    with open("grant_stage_data.csv", "w", newline="") as csvfile:
+        fieldnames = ["grant_url", "grant_stage"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for u in grant_stage_map:
+            writer.writerow({"grant_url": u, "grant_stage": grant_stage_map[u]})
 
     cursor.close()
     cnx.close()
