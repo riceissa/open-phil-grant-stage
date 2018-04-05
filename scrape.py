@@ -48,8 +48,9 @@ def main():
 
 def grant_review_process_guess(soup):
     doc = soup.get_text()
-    pat = re.compile(r"this is a discretionary[^.]+grant", re.IGNORECASE)
-    if pat.findall(doc):
+    pat1 = re.compile(r"this is a discretionary[^.]+grant", re.IGNORECASE)
+    pat2 = re.compile(r"this is a[^.]+no-process[^.]+grant", re.IGNORECASE)
+    if pat1.findall(doc) or pat2.findall(doc):
         return "discretionary grant"
     return "full-process grant"
 
