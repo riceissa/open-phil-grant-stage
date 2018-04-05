@@ -62,12 +62,15 @@ def grant_stage_guess(grant_stage_map, cursor, grant_url, grantee, donation_date
         return "renewal grant"
     if soup.body.find_all(text=re.compile("a renewal")):
         return "renewal grant"
-    if soup.body.find_all(text=re.compile("exit grant")):
+
+    pat1 = re.compile(r"exit grant", re.IGNORECASE)
+    pat2 = re.compile(r"previously.*exit grant", re.IGNORECASE)
+    if pat1.findall(doc) and not pat2.findall(doc):
         return "exit grant"
 
-    planning_pat1 = re.compile(r"planning grant", re.IGNORECASE)
-    planning_pat2 = re.compile(r"previously.*planning grant", re.IGNORECASE)
-    if planning_pat1.findall(doc) and not planning_pat2.findall(doc):
+    pat1 = re.compile(r"planning grant", re.IGNORECASE)
+    pat2 = re.compile(r"previously.*planning grant", re.IGNORECASE)
+    if pat1.findall(doc) and not pat2.findall(doc):
         return "planning grant"
 
     if len(date_url_pairs) == 1:
