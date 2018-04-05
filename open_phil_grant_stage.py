@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # License: CC0 https://creativecommons.org/publicdomain/zero/1.0/
 
+import sys
 import re
 import requests
 import mysql.connector
@@ -14,10 +15,16 @@ def main():
     # results
     grant_stage_map = {}
 
-    print(grant_stage_guess(grant_stage_map, cursor,
-                            "https://www.openphilanthropy.org/focus/global-catastrophic-risks/potential-risks-advanced-artificial-intelligence/stanford-university-percy-liang-planning-grant",
-                            "Stanford University",
-                            "2018-02-01"))
+    cursor.execute("""select donee,donation_date,url
+                      from donations
+                      where donor = 'Open Philanthropy Project'""")
+    donation_triples = cursor.fetchall()
+
+    for (grantee, donation_date, grant_url) in donation_triples:
+        grant_stage = grant_stage_guess(grant_stage_map, cursor, grant_url,
+                                        grantee, donation_date)
+        print("DEBUG:", grant_stage, grant_url, file=sys.stderr)
+        grant_stage_map[grant_url] = grant_stage
 
     cursor.close()
     cnx.close()
@@ -29,7 +36,7 @@ def grant_stage_guess(grant_stage_map, cursor, grant_url, grantee, donation_date
     if grant_url in grant_stage_map:
         # We already have the grant stage for this grant, so do nothing and
         # return
-        return None
+        return grant_stage_map[grant_url]
 
     response = requests.get(grant_url)
     soup = BeautifulSoup(response.content, "lxml")
@@ -41,6 +48,7 @@ def grant_stage_guess(grant_stage_map, cursor, grant_url, grantee, donation_date
         tag.decompose()
 
     doc = soup.get_text()
+
     cursor.execute("""select donation_date,url
                       from donations
                       where donor = 'Open Philanthropy Project' and
