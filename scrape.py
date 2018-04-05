@@ -22,32 +22,41 @@ def main():
                       order by donation_date""")
     donation_triples = cursor.fetchall()
 
-    fieldnames = ["grant_url", "grant_stage"]
+    fieldnames = ["grant_url", "grant_stage", "grant_review_process"]
     writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
     writer.writeheader()
 
     for (grantee, donation_date, grant_url) in donation_triples:
-        grant_stage = grant_stage_guess(grant_stage_map, cursor, grant_url,
+        response = requests.get(grant_url)
+        soup = BeautifulSoup(response.content, "lxml")
+        # Remove all "aside" tags because these sometimes contain the titles of
+        # other grants, e.g.
+        # https://www.openphilanthropy.org/focus/global-catastrophic-risks/potential-risks-advanced-artificial-intelligence/stanford-university-support-percy-liang
+        for tag in soup.find_all("aside"):
+            tag.decompose()
+
+        grant_stage = grant_stage_guess(grant_stage_map, cursor, soup,
                                         grantee, donation_date)
-        writer.writerow({"grant_url": grant_url, "grant_stage": grant_stage})
+        grant_review_process = grant_review_process_guess(soup)
+        writer.writerow({"grant_url": grant_url, "grant_stage": grant_stage,
+                         "grant_review_process": grant_review_process})
         grant_stage_map[grant_url] = grant_stage
 
     cursor.close()
     cnx.close()
 
 
-def grant_stage_guess(grant_stage_map, cursor, grant_url, grantee, donation_date):
+def grant_review_process_guess(soup):
+    doc = soup.get_text()
+    pat = re.compile(r"this is a discretionary[^.]+grant", re.IGNORECASE)
+    if pat.findall(doc):
+        return "discretionary grant"
+    return "full-process grant"
+
+
+def grant_stage_guess(grant_stage_map, cursor, soup, grantee, donation_date):
     """Return one of "planning grant", "initial grant", "renewal grant", "exit
     grant", or "repeated grant"."""
-    response = requests.get(grant_url)
-    soup = BeautifulSoup(response.content, "lxml")
-
-    # Remove all "aside" tags because these sometimes contain the titles of
-    # other grants, e.g.
-    # https://www.openphilanthropy.org/focus/global-catastrophic-risks/potential-risks-advanced-artificial-intelligence/stanford-university-support-percy-liang
-    for tag in soup.find_all("aside"):
-        tag.decompose()
-
     doc = soup.get_text()
 
     cursor.execute("""select donation_date,url
