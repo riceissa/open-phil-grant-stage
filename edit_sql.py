@@ -7,10 +7,10 @@ import re
 
 def main():
     d = {}
-    with open("grant_stage_data.csv", "r") as csvfile:
+    with open("data.csv", "r") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            d[row['grant_url']] = row['grant_stage']
+            d[row['grant_url']] = (row['grant_stage'], row['grant_review_process'])
 
     with open("open-phil-grants.sql", "r") as f:
         for line in f:
@@ -18,11 +18,12 @@ def main():
             if m:
                 for ending in ["),", ");"]:
                     if line.rstrip().endswith(ending):
-                        print(line.rstrip()[:-2] + ",'" + d[m.group(1)] + "'" +
-                              ending)
+                        stage, process = d[m.group(1)]
+                        print(line.rstrip()[:-2] + ",'" + stage + "'" +
+                              ",'" + process + "'" + ending)
             elif line.rstrip().endswith(") values"):
                 l = line.rstrip()
-                print(l[:-len(") values")] + ", grant_stage) values")
+                print(l[:-len(") values")] + ", grant_stage, grant_review_process) values")
             else:
                 print(line, end="")
 
