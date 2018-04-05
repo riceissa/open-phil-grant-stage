@@ -17,7 +17,8 @@ def main():
 
     cursor.execute("""select donee,donation_date,url
                       from donations
-                      where donor = 'Open Philanthropy Project'""")
+                      where donor = 'Open Philanthropy Project'
+                      order by donation_date""")
     donation_triples = cursor.fetchall()
 
     for (grantee, donation_date, grant_url) in donation_triples:
@@ -33,11 +34,6 @@ def main():
 def grant_stage_guess(grant_stage_map, cursor, grant_url, grantee, donation_date):
     """Return one of "planning grant", "initial grant", "renewal grant", "exit
     grant", or "repeated grant"."""
-    if grant_url in grant_stage_map:
-        # We already have the grant stage for this grant, so do nothing and
-        # return
-        return grant_stage_map[grant_url]
-
     response = requests.get(grant_url)
     soup = BeautifulSoup(response.content, "lxml")
 
@@ -86,8 +82,9 @@ def grant_stage_guess(grant_stage_map, cursor, grant_url, grantee, donation_date
     # could either be an initial grant (say, if the earlier grants were just
     # planning grants) or a repeated grant (if there was an earlier initial
     # grant). The only way to tell the grant stage is to check the grant stages
-    # of all earlier grants; if there is at least one initial grant, then this
-    # is a repeated grant. Otherwise, it is an initial grant.
+    # of all earlier grants (that's precisely why we started looping through
+    # the grants in chronological order); if there is at least one initial
+    # grant, then this is a repeated grant. Otherwise, it is an initial grant.
     for d, u in date_url_pairs:
         if d < donation_date and grant_stage_map[u] == "initial grant":
             return "repeated grant"
