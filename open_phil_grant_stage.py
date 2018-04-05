@@ -22,18 +22,15 @@ def main():
                       order by donation_date""")
     donation_triples = cursor.fetchall()
 
+    fieldnames = ["grant_url", "grant_stage"]
+    writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
+    writer.writeheader()
+
     for (grantee, donation_date, grant_url) in donation_triples:
         grant_stage = grant_stage_guess(grant_stage_map, cursor, grant_url,
                                         grantee, donation_date)
-        print("DEBUG:", grant_stage, grant_url, file=sys.stderr)
+        writer.writerow({"grant_url": grant_url, "grant_stage": grant_stage})
         grant_stage_map[grant_url] = grant_stage
-
-    with open("grant_stage_data.csv", "w", newline="") as csvfile:
-        fieldnames = ["grant_url", "grant_stage"]
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for u in grant_stage_map:
-            writer.writerow({"grant_url": u, "grant_stage": grant_stage_map[u]})
 
     cursor.close()
     cnx.close()
