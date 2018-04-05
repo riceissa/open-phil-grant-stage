@@ -64,12 +64,12 @@ def grant_stage_guess(grant_stage_map, cursor, grant_url, grantee, donation_date
         return "renewal grant"
 
     pat1 = re.compile(r"exit grant", re.IGNORECASE)
-    pat2 = re.compile(r"previously.*exit grant", re.IGNORECASE)
+    pat2 = re.compile(r"previously[^.]*exit grant", re.IGNORECASE)
     if pat1.findall(doc) and not pat2.findall(doc):
         return "exit grant"
 
     pat1 = re.compile(r"planning grant", re.IGNORECASE)
-    pat2 = re.compile(r"previously.*planning grant", re.IGNORECASE)
+    pat2 = re.compile(r"previously[^.]*planning grant", re.IGNORECASE)
     if pat1.findall(doc) and not pat2.findall(doc):
         return "planning grant"
 
