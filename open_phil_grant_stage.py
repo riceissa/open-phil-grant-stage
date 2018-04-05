@@ -57,7 +57,6 @@ def grant_stage_guess(grant_stage_map, cursor, grant_url, grantee, donation_date
                    (grantee,))
     date_url_pairs = cursor.fetchall()
     earliest_grant_date = min(x[0] for x in date_url_pairs)
-    print(type(earliest_grant_date))
 
     if soup.body.find_all(text=re.compile("renewal grant")):
         return "renewal grant"
