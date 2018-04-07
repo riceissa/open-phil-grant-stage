@@ -38,11 +38,13 @@ def main():
         grant_stage = grant_stage_guess(grant_stage_map, cursor, soup,
                                         grantee, donation_date)
         grant_review_process = grant_review_process_guess(soup)
-        # expected_money_use_guess(soup, grant_url)
-        print(grant_url, file=sys.stderr)
-        print(purpose_guess(soup), file=sys.stderr)
-        writer.writerow({"grant_url": grant_url, "grant_stage": grant_stage,
-                         "grant_review_process": grant_review_process})
+        expected_money_use = expected_money_use_guess(soup, grant_url)
+        purpose = purpose_guess(soup)
+        writer.writerow({"grant_url": grant_url,
+                         "grant_stage": grant_stage,
+                         "grant_review_process": grant_review_process,
+                         "purpose": purpose,
+                         "expected_money_use": expected_money_use})
         grant_stage_map[grant_url] = grant_stage
 
     cursor.close()
@@ -68,7 +70,7 @@ def purpose_guess(soup):
 
 
 def expected_money_use_guess(soup, url):
-    got_one = False
+    result = []
     doc = soup.get_text()
     pat_strings = [
             r"the (funding|grant|grant funding) is intended to[^.]+",
@@ -88,13 +90,10 @@ def expected_money_use_guess(soup, url):
         pat = re.compile(pat_string, re.IGNORECASE)
         found = pat.findall(doc)
         if found:
-            got_one = True
-            # print("GOT IT", found, file=sys.stderr)
+            result.extend(found)
     if soup.title.find_all(text=re.compile("general support", re.IGNORECASE)):
-        got_one = True
-        # print("FOUND:", "general support", file=sys.stderr)
-    if not got_one:
-        print("NOT FOUND:", url, file=sys.stderr)
+        result.append("general support")
+    return result
 
 
 def grant_stage_guess(grant_stage_map, cursor, soup, grantee, donation_date):
