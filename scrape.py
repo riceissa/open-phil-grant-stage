@@ -38,6 +38,9 @@ def main():
         grant_stage = grant_stage_guess(grant_stage_map, cursor, soup,
                                         grantee, donation_date)
         grant_review_process = grant_review_process_guess(soup)
+        # expected_money_use_guess(soup, grant_url)
+        print(grant_url, file=sys.stderr)
+        print(purpose_guess(soup), file=sys.stderr)
         writer.writerow({"grant_url": grant_url, "grant_stage": grant_stage,
                          "grant_review_process": grant_review_process})
         grant_stage_map[grant_url] = grant_stage
@@ -53,6 +56,45 @@ def grant_review_process_guess(soup):
     if pat1.findall(doc) or pat2.findall(doc):
         return "discretionary grant"
     return "full-process grant"
+
+
+def purpose_guess(soup):
+    try:
+        purpose = (soup.find("div", {"class": "field-name-field-grant-purpose"})
+                       .find("div", {"class": "field-item"}).text).strip()
+    except:
+        purpose = None
+    return purpose
+
+
+def expected_money_use_guess(soup, url):
+    got_one = False
+    doc = soup.get_text()
+    pat_strings = [
+            r"the (funding|grant|grant funding) is intended to[^.]+",
+            r"the (grant|funding|grant funding) will be used[^.]+",
+            r"plans to use this (grant|funding|grant funding)[^.]+",
+            r"enable it to[^.]+",
+            r"funding will allow[^.]+",
+            r"to develop[^.]+",
+            r"we[^.]+grant[^.]+seed funding[^.]+",
+            r"[^.]*using this funding[^.]*",
+            r"support[^.]+(project|campaign|research|advocacy|work|"
+                "project|research|trial|discussion|dinner|literature review|"
+                "case stud|lobby|event|exhibit|creation|meeting|course|stud|"
+                "conference|prize|development)[^.]*",
+            ]
+    for pat_string in pat_strings:
+        pat = re.compile(pat_string, re.IGNORECASE)
+        found = pat.findall(doc)
+        if found:
+            got_one = True
+            # print("GOT IT", found, file=sys.stderr)
+    if soup.title.find_all(text=re.compile("general support", re.IGNORECASE)):
+        got_one = True
+        # print("FOUND:", "general support", file=sys.stderr)
+    if not got_one:
+        print("NOT FOUND:", url, file=sys.stderr)
 
 
 def grant_stage_guess(grant_stage_map, cursor, soup, grantee, donation_date):
