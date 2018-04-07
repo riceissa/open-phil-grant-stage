@@ -74,15 +74,15 @@ def expected_money_use_guess(soup, url):
     result = []
     doc = soup.get_text()
     pat_strings = [
-            r"the (funding|grant|grant funding) is intended to[^.]+",
-            r"the (grant|funding|grant funding) will be used[^.]+",
+            r"the (?:funding|grant|grant funding) is intended to[^.]+",
+            r"the (?:grant|funding|grant funding) will be used[^.]+",
             r"plans to use this (grant|funding|grant funding)[^.]+",
             r"enable it to[^.]+",
             r"funding will allow[^.]+",
             r"to develop[^.]+",
             r"we[^.]+grant[^.]+seed funding[^.]+",
             r"[^.]*using this funding[^.]*",
-            r"support[^.]+(project|campaign|research|advocacy|work|"
+            r"support[^.]+(?:project|campaign|research|advocacy|work|"
                 "project|research|trial|discussion|dinner|literature review|"
                 "case stud|lobby|event|exhibit|creation|meeting|course|stud|"
                 "conference|prize|development)[^.]*",
