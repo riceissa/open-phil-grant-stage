@@ -22,7 +22,8 @@ def main():
                       order by donation_date""")
     donation_triples = cursor.fetchall()
 
-    fieldnames = ["grant_url", "grant_stage", "grant_review_process"]
+    fieldnames = ["grant_url", "grant_stage", "grant_review_process",
+                  "purpose", "expected_money_use"]
     writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
     writer.writeheader()
 
